@@ -76,7 +76,7 @@ def main():
 	np.save("q.csv", Q)
 
 def train_agent(env):
-	Q = np.zeros((13,13,13,13,13,31, 16, 4))
+	Q = np.zeros((13,13,13,13,14,31, 16, 4))
 	alpha = 0.5
 	epsilon = 0.1
 	gamma = 0.3
