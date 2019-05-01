@@ -14,6 +14,7 @@ class pegEnv():
 		self.state = self.updateState(action)
 		#done = (state[6] == 1 or state[6] == 2 or state[6] == 4 or state[6] == 8)
 		done = (self.state[6] <= 0)
+		
 		return self.state, reward, done
 
 	def reset(self):
@@ -35,6 +36,9 @@ class pegEnv():
 
 		if state[5] + self.valTab[state[action]] == 31:
 			reward += 2
+
+		if state[5] + self.valTab[state[action]] > 31:
+			reward -= 1
 
 		return reward
 
@@ -58,6 +62,13 @@ class pegEnv():
 			return False
 		return True
 
+def randomEnemyPlay(state):
+	if state[5] == 31:
+		return 31
+	else:
+		random.randint(1, 31-state[5]);
+	
+
 def main():
 	random.seed()
 	env = pegEnv()
@@ -68,26 +79,24 @@ def train_agent(env):
 	Q = np.zeros((13,13,13,13,13,31, 16, 4))
 	alpha = 0.5
 	epsilon = 0.1
+	gamma = 0.3
+	a = 0
+	b = 0
 
-	lick = 0
-	lol = 0
 	for index, x in np.ndenumerate(Q):
-		lick += 1
-		if (lick % 100000 == 0):
-			print(lol)
-			lol += 1
+		a += 1
+		if a % 100000 == 0:
+			b += 1
+			print(b)
 		temp1 = list(index)
 		temp1.pop(7)
 		if (temp1[6] == 0):
 			continue
 
-
-		for i in range(1, 10):
+		for i in range(1, 2):
 			state = env.reset()
 			state = tuple(temp1)
-			#print('state: ', state)
 
-			epochs, penalites, reward, = 0,0,0
 			done = False
 			while not done:
 				#make sure action is valid
@@ -101,20 +110,21 @@ def train_agent(env):
 						action = 0
 					else:
 						action += 1
-					
-				#print(action)
 			
 				next_state, reward, done = env.step(action)
+				#random card played by enemy
 
 				temp = list(state)
 				temp.append(action)
+				temp[5] = randomEnemyPlay(temp)
 				temp = tuple(temp)
 
+
 				old_value = Q[temp]
-				#print('nextState: ', next_state)
 				next_max = np.max(Q[next_state])
 
-				new_value = (1 - alpha) * old_value + alpha * (reward + next_max)
+				new_value = (1 - alpha) * old_value + alpha * (reward +
+				gamma * next_max)
 				Q[temp] = new_value
 
 				state = next_state
